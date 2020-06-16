@@ -2,10 +2,15 @@
 int x1 , x2 ;
 float x3 ;
 x1 = x2 + x3 ;
+switch ( x1 )
+{
+case 1 :
+x2 = x1 ;
+break;
+}
  */
 package compiarit;
 
-import java.awt.event.ActionListener;
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -14,7 +19,6 @@ import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -31,14 +35,11 @@ public class CompiAritmetica extends javax.swing.JFrame {
     public CompiAritmetica() {
         initComponents();
     }
-    //int i = 0;
-    static String lexemas = "", texto = "", triplo = "Operador\tDato Objeto\tDato Fuente\n";
-    static int numIDE = 1;
+    static String lexemas = "", texto = "", triplo = "#\tOperador\tDato Objeto\tDato Fuente\n", t1 = "", triploSwitch = "";
+    static int numIDE = 1, contadorTriplos = 1;
     static String[] notToken;
     static List<Variables> TablaVariables = new ArrayList<>();
     static List<Errores> TablaErrores = new ArrayList<>();
-    //static Stack <Character> stack = new Stack<Character>();
-    //static String[] prefijo = new String[40];
     static List<String> ListaPrefijo = new ArrayList<>();
 
     /**
@@ -172,29 +173,27 @@ public class CompiAritmetica extends javax.swing.JFrame {
 
         String instruccion = txtInst.getText();         //pedir la instruccion
         String[] linea = instruccion.split("\\n");//separar linea por linea
-        int n = 1;          //CONTADOR DE LINEAS
+        int i, n = 1;          //CONTADOR DE LINEAS
+
         for (String line : linea) {  //separar linea por linea
-            if (igualAparece(line)) {
-                incopatibilidadTipos(line, n);
-                //JOptionPane.showMessageDialog(null, prefijo2(line));
-                calcularTriplos(line);
-            }
             String[] lexema = line.split("\\s");   //dividir por tokens la instruccion
             for (String lex : lexema) {   //para checar cada token
                 checarLexema(lex, line, n);
-
             }
             n++;
         }
 
-        /*
-        n = 1;
-        for (String line : linea) {  //separar linea por linea
-            if (igualAparece(line)){
-                    incopatibilidadTipos(line,n);
+        for (i = 0; i < linea.length; i++) {
+
+            if (switchAparece(linea[i])) {
+                incopatibilidadTiposSwitch(linea[i], i + 1);
+                i = calcularCases(i);
             }
-            n++;
-        }*/
+            if (igualAparece(linea[i])) {
+                incopatibilidadTipos(linea[i], i + 1);
+                calcularTriplos(linea[i]);
+            }
+        }
         imprimirVariables();
         imprimirErrores();
         imprimirTxt();
@@ -238,6 +237,34 @@ public class CompiAritmetica extends javax.swing.JFrame {
     }
 
     ///////////////////// METODOS ////////////////////////
+    public int calcularCases(int n) {
+        String instruccion = txtInst.getText();         //pedir la instruccion
+        String[] linea = instruccion.split("\\n");//separar linea por linea
+        int i;
+
+        for (i = n; i <= linea.length; i++) {
+
+            if (linea[i].contains("case")) {
+                String[] t2 = linea[i].split("case");
+                t2[1] = t2[1].replace(":", "");
+                t2[1] = t2[1].replace(" ", "");
+                calcularTriplosSwitch(t2[1]);
+            }
+            if (igualAparece(linea[i])) {
+                calcularTriplos(linea[i]);
+                //TALVEZ PONER EL JMP DEL BREAK AQUI CON EL STRING IMPRESOR
+                triplo = triplo + contadorTriplos + "\t\tJMP\t\tSALIDA\n";
+                contadorTriplos++;
+            }
+            //agregar si aparece {
+            if (linea[i].equals("}")) {
+                break;
+            }
+
+        }
+        return i;
+    }
+
     public void incopatibilidadTipos(String line, int linea) {
 
         Variables var;
@@ -247,33 +274,21 @@ public class CompiAritmetica extends javax.swing.JFrame {
         String[] lexema = line.split("\\s");   //dividir por tokens la instruccion
         int x = 0;
         for (String lex : lexema) {   //para checar cada token
-
-            //int x = 0;
             for (int i = 0; i < TablaVariables.size(); i++) {
                 var = TablaVariables.get(i);
-
                 if (var.getToken().startsWith("IDE")) {
                     if (lex.equals(var.getLexema())) {
-                        //JOptionPane.showMessageDialog(null, lex + " es un lexema igual");
-
                         if (x == 0) {
                             primerDato = var.getDato();
-                            //JOptionPane.showMessageDialog(null, primerDato);
                             x = 1;
-                            //JOptionPane.showMessageDialog(null, x);
-
                         }
-
                         segundoDato = var.getDato();
                         if (!primerDato.equals(segundoDato)) {
-                            //JOptionPane.showMessageDialog(null, "entro en error1");
                             if (!checarExistenciaErrores(lex)) {
                                 TablaErrores.add(new Errores(var.getToken(), "INCOMPATIBILIDAD DE TIPOS", linea));
-                                //TablaVariables.add(new Variables(lex, "IDE" + numIDE, checarDato(lex, linea)));
                                 numIDE++;
                             }
                         }
-                        //JOptionPane.showMessageDialog(null, "ERROR TIPO LINEA "+linea);
                     }
                 }
             }
@@ -281,15 +296,35 @@ public class CompiAritmetica extends javax.swing.JFrame {
 
     }
 
+    public void incopatibilidadTiposSwitch(String line, int linea) {
+        Variables var;
+        String[] lexema = line.split("\\(");   //dividir por tokens la instruccion
+        String variable = lexema[1].replace(")", "");
+        variable = variable.replace(" ", "");
+        t1 = variable;
+        for (int i = 0; i < TablaVariables.size(); i++) {
+            var = TablaVariables.get(i);
+            if (var.getLexema().equals(variable)) {
+                if (checarExistenciaErrores(var.getToken())) {
+                    TablaErrores.add(new Errores(var.getToken(), "INCOMPATIBILIDAD DE TIPOS", linea));
+                    numIDE++;
+                }
+            }
+        }
+    }
+
     public boolean igualAparece(String linea) {
         Pattern patINT = Pattern.compile("=");
         Matcher matINT = patINT.matcher(linea);
 
-        if (matINT.find()) {
-            return true;
-        } else {
-            return false;
-        }
+        return matINT.find();
+    }
+
+    public boolean switchAparece(String linea) {
+        Pattern patINT = Pattern.compile("switch");
+        Matcher matINT = patINT.matcher(linea);
+
+        return matINT.find();
     }
 
     public String prefijo2(String line) {
@@ -301,9 +336,7 @@ public class CompiAritmetica extends javax.swing.JFrame {
         int x = 0;
         String[] lexema = line.split("\\s");   //dividir por tokens la instruccion
         for (String lex : lexema) {   //para checar cada token
-            //OptionPane.showMessageDialog(null, lex);
             if (isOperator(lex)) {
-
                 operador = lex;
                 //solo me sirve para poner el = a lo ultimo
                 if (lex.equals("=")) {
@@ -323,33 +356,27 @@ public class CompiAritmetica extends javax.swing.JFrame {
             x++;
             if (x == 3) {
                 operando1 = operador + " " + operando1 + " " + operando2;
-                //calcularTriplos(operando1);
-                //JOptionPane.showConfirmDialog(null, operando1 + "\n x es igual: " + x);
                 x = 1;
             }
 
         }//End of for
         salida = "=" + " " + primero + " " + operando1;
-        //calcularTriplos(operando1);
         return salida;
     }
-    
-    public void calcularTriplos(String prefijo){
-        //JOptionPane.showMessageDialog(null, prefijo);
-        
+
+    public void calcularTriplos(String prefijo) {
+
         String salida = "";
         String operando1 = "";
         String operando2 = "";
         String operador = "";
         String primero = "";
         int x = 0;
-        
-        String[] lexema = prefijo.split("\\s");   //dividir por tokens el prefijo
-         
-        for (String lex : lexema) {   //para checar cada token
-            //OptionPane.showMessageDialog(null, lex);
-            if (isOperator(lex)) {
 
+        String[] lexema = prefijo.split("\\s");   //dividir por tokens el prefijo
+
+        for (String lex : lexema) {   //para checar cada token
+            if (isOperator(lex)) {
                 operador = lex;
                 //solo me sirve para poner el = a lo ultimo
                 if (lex.equals("=")) {
@@ -364,102 +391,71 @@ public class CompiAritmetica extends javax.swing.JFrame {
                     operando1 = lex;
                 }
                 operando2 = lex;
-
             }
             x++;
             if (x == 3) {
-                //operando1 = operador + " " + operando1 + " " + operando2;
                 operando1 = operando1 + " " + operador + " " + operando2;
-                //JOptionPane.showConfirmDialog(null, operando1);
-                //calcularTriplos(operando1);
-                //JOptionPane.showConfirmDialog(null, operando1 + "\n x es igual: " + x);
                 x = 1;
             }
-            
-           
+
         }
-        
+
         String triplos[] = operando1.split("\\s");
-        int y = 0;
-        
-        /*for (String trip : triplos) { 
-            if (y == 0)
-                salida = "= \t T1 \t " + trip + "\n";
-            else{
-                if(isOperator(trip)){
-                    salida = salida + trip + " \t T1 \t " + 
+        for (int n = 0; n < triplos.length; n++) {
+            if (n == 0) {
+                salida = contadorTriplos + "\t\t=\t\tT1\t\t" + triplos[n] + "\n";
+                contadorTriplos++;
+            } else {
+                if (isOperator(triplos[n])) {
+                    salida = salida + contadorTriplos + "\t\t" + triplos[n] + "\t\tT1\t\t" + triplos[n + 1] + "\n";
+                    contadorTriplos++;
                 }
-                salida = salida + trip + " \t T1 \t " + triplos[+2] + "\n";
-            }
-            y++;
-        }
-        */
-        for (int n=0; n<triplos.length; n++){
-            if (n == 0)
-                salida = "=\t\tT1\t\t" + triplos[n] + "\n";
-            else{
-                if(isOperator(triplos[n])){
-                    salida = salida + triplos[n] + "\t\tT1\t\t" + triplos[n+1] + "\n";
-                }
-                
             }
         }
-        salida = salida + "=\t\t" + primero + "\t\tT1\n\n";
+        salida = salida + contadorTriplos + "\t\t=\t\t" + primero + "\t\tT1\n";
+        contadorTriplos++;
         triplo = triplo + salida;
-        //JOptionPane.showConfirmDialog(null, salida);
     }
-    /*
-int c ;
-float b ;
-j = a + b - c ;
-c = c * c * c ; 
-    */
 
-    
+    public void calcularTriplosSwitch(String t2) {
 
-    /*for (int x = line.length()-1; x>=0; x--){
-            lexema = line.
-        }*/
- /*public String prefijo(String line) {
-        //Declare Method Variables
-        String input = "";
-        String output = "";
-        char character = ' ';
-        char nextCharacter = ' ';
+        triploSwitch = contadorTriplos + "\t\t=\t\tT1\t\t" + t1 + "\n";
+        contadorTriplos++;
+        triploSwitch = triploSwitch + contadorTriplos + "\t\t=\t\tT2\t\t" + t2 + "\n";
+        contadorTriplos++;
+        triploSwitch = triploSwitch + contadorTriplos + "\t\t==\t\tT1\t\tT2\n";
+        contadorTriplos++;
+        triploSwitch = triploSwitch + contadorTriplos + "\t\tTR1\t\tTRUE\t\t" + (contadorTriplos + 2) + "\n";
+        contadorTriplos++;
+        triploSwitch = triploSwitch + contadorTriplos + "\t\tTR1\t\tFALSE\t\tSALTO\n";
+        contadorTriplos++; //CAMBIAR SALTO
+        triplo = triplo + triploSwitch;
+        /*
+int x1 , x2 ;
+float x3 ;
+x1 = x2 + x3 ;
+switch ( x1 )
+{
+case 1 :
+x2 = x1 ;
+break ;
+case 2 :
+x3 = x4 ;
+break ;
+}
+         */
+    }
 
-        for(int limit = line.length() - 1; limit >= 0 ; limit--){
-            JOptionPane.showMessageDialog(null, character = line.charAt(limit));
-
-            if (isOperator(character)) {
-                output = output + character + " ";
-            } 
-             else {
-                if (Character.isDigit(character) && (limit + 1) < limit && Character.isDigit(line.charAt(limit + 1))) {
-                    stack.push(character);
-                    stack.push(line.charAt(limit + 1));
-                } else if (Character.isDigit(character)) {
-                    stack.push(character);
-                } else {
-                    output = output + character;
-                }
-            }
-        }//End of for
-
-        while (!stack.isEmpty()) {
-            output = output + stack.pop() + " ";
-        }
-
-        return output;
-    }//End of translate method
-     */
-    //Check priority on characters
     public static int precedence(String operator) {
-        if (operator.equals("+") || operator.equals("-")) {
-            return 1;
-        } else if (operator.equals("*") || operator.equals("/")) {
-            return 2;
-        } else {
-            return 0;
+        switch (operator) {
+            case "+":
+            case "-":
+                return 1;
+            case "*":
+            case "/":
+                return 2;
+            default:
+                return 0;
         }
     }//End of priority method
 
@@ -479,7 +475,7 @@ c = c * c * c ;
         if (matIDE.matches()) {
             lexemas = lexemas + lexema + " ";
             if (checarExistencia(lexema) == false) {
-                if (lexema.equals("int") || lexema.equals("float")) {
+                if (lexema.equals("int") || lexema.equals("float") || lexema.equals("switch") || lexema.equals("case")) {
                     checarTipoDato(lexema, linea);
                 } else {
                     TablaVariables.add(new Variables(lexema, "IDE" + numIDE, checarDato(lexema, linea)));
@@ -524,13 +520,38 @@ c = c * c * c ;
                         TablaVariables.add(new Variables(lexema, "ASIG", checarDato(lexema, linea)));
                     }
                     break;
+                case "(":
+                    if (!checarExistencia(lexema)) {
+                        TablaVariables.add(new Variables(lexema, "PARIZQ", checarDato(lexema, linea)));
+                    }
+                    break;
+                case ")":
+                    if (!checarExistencia(lexema)) {
+                        TablaVariables.add(new Variables(lexema, "PARDER", checarDato(lexema, linea)));
+                    }
+                    break;
+                case "{":
+                    if (!checarExistencia(lexema)) {
+                        TablaVariables.add(new Variables(lexema, "LLAVIZQ", checarDato(lexema, linea)));
+                    }
+                    break;
+                case "}":
+                    if (!checarExistencia(lexema)) {
+                        TablaVariables.add(new Variables(lexema, "LLAVDER", checarDato(lexema, linea)));
+                    }
+                    break;
+                case ":":
+                    if (!checarExistencia(lexema)) {
+                        TablaVariables.add(new Variables(lexema, "DEL2", checarDato(lexema, linea)));
+                    }
+                    break;
+
                 default:
                     if (!checarExistenciaErrores(lexema) && !checarExistencia(lexema)) {
                         TablaErrores.add(new Errores("IDE" + numIDE, lexema, n));
                         TablaVariables.add(new Variables(lexema, "IDE" + numIDE, checarDato(lexema, linea)));
                         numIDE++;
                     }
-
             }
         }
 
@@ -546,6 +567,13 @@ c = c * c * c ;
             tida = "FLOAT";
         }
 
+        if (token.equals("switch")) {
+            tida = "SWITCH";
+        }
+
+        if (token.equals("case")) {
+            tida = "CASE";
+        }
         TablaVariables.add(new Variables(token, tida, checarDato(token, linea)));
     }
 
@@ -643,21 +671,20 @@ c = c * c * c ;
     }
 
     private void imprimirTxt() {
-        //JOptionPane.showMessageDialog(null, lexemas);
+
         String[] token = lexemas.split("\\s");
         for (String token1 : token) {   //para checar cada token
             for (int i = 0; i < TablaVariables.size(); i++) {
                 Variables var = TablaVariables.get(i);
                 if (var.getLexema().equals(token1)) {
                     texto = texto + var.getToken() + " ";
-                    if (token1.equals(";")) {
+                    if (token1.equals(";") || token1.equals(":") || token1.equals("{") || token1.equals("}")) {
                         texto = texto + " \n";
                     }
                 }
             }
         }
 
-        // JOptionPane.showMessageDialog(null, texto);
         try (Writer writer = new BufferedWriter(new OutputStreamWriter(
                 new FileOutputStream("Archivo de Tokens.txt"), "utf-8"))) {
             writer.write(texto);
@@ -669,13 +696,9 @@ c = c * c * c ;
         }
 
     }
-    
-    
-    private void imprimirTxtTriplos() {
-        //JOptionPane.showMessageDialog(null, lexemas);
-        
 
-        // JOptionPane.showMessageDialog(null, texto);
+    private void imprimirTxtTriplos() {
+
         try (Writer writer = new BufferedWriter(new OutputStreamWriter(
                 new FileOutputStream("Archivo de Triplo.txt"), "utf-8"))) {
             writer.write(triplo);
@@ -687,6 +710,7 @@ c = c * c * c ;
         }
 
     }
+
     ////////////////////// CLASES ///////////////////
     public static class Variables {
 
