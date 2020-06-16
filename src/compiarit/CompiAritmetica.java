@@ -62,6 +62,7 @@ public class CompiAritmetica extends javax.swing.JFrame {
         tableErrores = new javax.swing.JTable();
         jLabel2 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
+        btnReglas = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
@@ -115,6 +116,13 @@ public class CompiAritmetica extends javax.swing.JFrame {
         jLabel3.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel3.setText("TABLA DE ERRORES");
 
+        btnReglas.setText("Reglas");
+        btnReglas.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnReglasActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -131,7 +139,8 @@ public class CompiAritmetica extends javax.swing.JFrame {
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 393, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 393, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 393, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btnReglas, javax.swing.GroupLayout.PREFERRED_SIZE, 95, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 67, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 393, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -156,7 +165,9 @@ public class CompiAritmetica extends javax.swing.JFrame {
                     .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 315, Short.MAX_VALUE)
                     .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(btnLimpiar)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnLimpiar)
+                    .addComponent(btnReglas))
                 .addGap(14, 14, 14))
         );
 
@@ -200,6 +211,24 @@ public class CompiAritmetica extends javax.swing.JFrame {
         imprimirTxtTriplos();
         JOptionPane.showMessageDialog(null, "Archivo de Triplos y Token generados!");
     }//GEN-LAST:event_btnAceptarActionPerformed
+
+    private void btnReglasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnReglasActionPerformed
+        // TODO add your handling code here:
+        
+        JOptionPane.showMessageDialog(null, "1.-Separar por espacio TODO variables,signos,palabras reservadadas, etc. \n"
+                + "2.- Terminar linea con ';'\n"
+                + "3.- El compilador solo soporta los siguientes operaciones, Suma, Resta, Multiplicacion y Divicion\n"
+                + "4.- Ejemplo de Codigo: \n"
+                + "int x1 , x2 ;\n"
+                + "float x3 ;\n"
+                + "x1 = x2 + x3 ;\n"
+                + "switch ( x1 )\n"
+                + "{\n"
+                + "case 1 :\n"
+                + "x2 = x1 ;\n"
+                + "break;\n"
+                + "}", "Reglas!!!", JOptionPane.INFORMATION_MESSAGE);
+    }//GEN-LAST:event_btnReglasActionPerformed
 
     /**
      * @param args the command line arguments
@@ -778,6 +807,7 @@ break ;
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private static javax.swing.JButton btnAceptar;
     private javax.swing.JButton btnLimpiar;
+    private javax.swing.JButton btnReglas;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;

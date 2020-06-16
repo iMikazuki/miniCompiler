@@ -38,6 +38,7 @@
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Component id="jScrollPane3" alignment="0" min="-2" pref="393" max="-2" attributes="0"/>
                           <Component id="jLabel2" alignment="0" min="-2" pref="393" max="-2" attributes="0"/>
+                          <Component id="btnReglas" alignment="0" min="-2" pref="95" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace pref="67" max="32767" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
@@ -71,7 +72,10 @@
                   <Component id="jScrollPane3" alignment="0" pref="0" max="32767" attributes="0"/>
               </Group>
               <EmptySpace type="unrelated" max="-2" attributes="0"/>
-              <Component id="btnLimpiar" min="-2" max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="btnLimpiar" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="btnReglas" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
               <EmptySpace min="-2" pref="14" max="-2" attributes="0"/>
           </Group>
       </Group>
@@ -181,6 +185,14 @@
         <Property name="horizontalAlignment" type="int" value="0"/>
         <Property name="text" type="java.lang.String" value="TABLA DE ERRORES"/>
       </Properties>
+    </Component>
+    <Component class="javax.swing.JButton" name="btnReglas">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Reglas"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnReglasActionPerformed"/>
+      </Events>
     </Component>
   </SubComponents>
 </Form>
