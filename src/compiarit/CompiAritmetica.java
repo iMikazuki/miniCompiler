@@ -1,12 +1,14 @@
 /*
 int x1 , x2 ;
 float x3 ;
-x1 = x2 + x3 ;
 switch ( x1 )
 {
 case 1 :
 x2 = x1 ;
-break;
+break ;
+case 2 :
+x1 = x2 ; 
+break ;
 }
  */
 package compiarit;
@@ -35,7 +37,8 @@ public class CompiAritmetica extends javax.swing.JFrame {
     public CompiAritmetica() {
         initComponents();
     }
-    static String lexemas = "", texto = "", triplo = "#\tOperador\tDato Objeto\tDato Fuente\n", t1 = "", triploSwitch = "";
+    static String lexemas = "", texto = "", triplo = "#\tOperador\tDato Objeto\tDato Fuente\n", t1 = "",
+            triploSwitch = "", tipoDatoSwitch = "", ensamblador = "";
     static int numIDE = 1, contadorTriplos = 1;
     static String[] notToken;
     static List<Variables> TablaVariables = new ArrayList<>();
@@ -195,30 +198,33 @@ public class CompiAritmetica extends javax.swing.JFrame {
         }
 
         for (i = 0; i < linea.length; i++) {
-
-            if (switchAparece(linea[i])) {
-                incopatibilidadTiposSwitch(linea[i], i + 1);
-                i = calcularCases(i);
-            }
             if (igualAparece(linea[i])) {
                 incopatibilidadTipos(linea[i], i + 1);
                 calcularTriplos(linea[i]);
             }
+            if (switchAparece(linea[i])) {
+                obtenerTemporales(linea[i], i + 1);
+                i = calcularCases(i);
+            }
+
         }
         imprimirVariables();
         imprimirErrores();
         imprimirTxt();
         imprimirTxtTriplos();
+        calcularEnsamblador();
+        imprimirEnsamblador();
         JOptionPane.showMessageDialog(null, "Archivo de Triplos y Token generados!");
     }//GEN-LAST:event_btnAceptarActionPerformed
 
     private void btnReglasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnReglasActionPerformed
         // TODO add your handling code here:
-        
+
         JOptionPane.showMessageDialog(null, "1.-Separar por espacio TODO variables,signos,palabras reservadadas, etc. \n"
-                + "2.- Terminar linea con ';'\n"
-                + "3.- El compilador solo soporta los siguientes operaciones, Suma, Resta, Multiplicacion y Divicion\n"
-                + "4.- Ejemplo de Codigo: \n"
+                + "2.- Terminar linea con ';'.\n"
+                + "3.- El compilador solo soporta los siguientes operaciones: Suma, Resta, Multiplicacion y Divicion.\n"
+                + "4.- El compilador solo soporta los siguiente tipos de datos: int, float.\n"
+                + "5.- Ejemplo de codigo:\n"
                 + "int x1 , x2 ;\n"
                 + "float x3 ;\n"
                 + "x1 = x2 + x3 ;\n"
@@ -278,8 +284,10 @@ public class CompiAritmetica extends javax.swing.JFrame {
                 t2[1] = t2[1].replace(":", "");
                 t2[1] = t2[1].replace(" ", "");
                 calcularTriplosSwitch(t2[1]);
+                incopatibilidadTiposSwitch(t2[1], i);
             }
             if (igualAparece(linea[i])) {
+                incopatibilidadTipos(linea[i], i + 1);
                 calcularTriplos(linea[i]);
                 //TALVEZ PONER EL JMP DEL BREAK AQUI CON EL STRING IMPRESOR
                 triplo = triplo + contadorTriplos + "\t\tJMP\t\tSALIDA\n";
@@ -287,7 +295,12 @@ public class CompiAritmetica extends javax.swing.JFrame {
             }
             //agregar si aparece {
             if (linea[i].equals("}")) {
+                triplo = triplo.replace("SALIDA", contadorTriplos + ""); //para saltar hacia la ultima linea
                 break;
+            }
+
+            if (linea[i].contains("break")) {
+                triplo = triplo.replace("SALTO", contadorTriplos + "");
             }
 
         }
@@ -325,19 +338,43 @@ public class CompiAritmetica extends javax.swing.JFrame {
 
     }
 
-    public void incopatibilidadTiposSwitch(String line, int linea) {
+    public void incopatibilidadTiposSwitch(String comparar, int i) {
+        if (tipoDatoSwitch.equals("int")) {
+            Pattern patIDE = Pattern.compile("\\d*");        //cualquier identificador que sea numero
+            Matcher matIDE = patIDE.matcher(comparar);
+
+            if (!matIDE.matches()) {
+                if (!checarExistenciaErrores(comparar)) {
+                    TablaErrores.add(new Errores("IDE" + numIDE, "INCOMPATIBILIDAD DE TIPOS", i + 1));
+                    numIDE++;
+                }
+            }
+        }
+        if (tipoDatoSwitch.equals("float")) {
+            Pattern patIDE = Pattern.compile("\\d*\\.\\d*");        //cualquier identificador que sea float
+            Matcher matIDE = patIDE.matcher(comparar);
+
+            if (!matIDE.matches()) {
+                if (!checarExistenciaErrores(comparar)) {
+                    TablaErrores.add(new Errores("IDE" + numIDE, "INCOMPATIBILIDAD DE TIPOS", i + 1));
+                    numIDE++;
+                }
+            }
+
+        }
+
+    }
+
+    public void obtenerTemporales(String line, int linea) {
         Variables var;
         String[] lexema = line.split("\\(");   //dividir por tokens la instruccion
         String variable = lexema[1].replace(")", "");
-        variable = variable.replace(" ", "");
-        t1 = variable;
+        t1 = variable.replace(" ", ""); //t1 es el temporal uno que luego se usa
+
         for (int i = 0; i < TablaVariables.size(); i++) {
             var = TablaVariables.get(i);
-            if (var.getLexema().equals(variable)) {
-                if (checarExistenciaErrores(var.getToken())) {
-                    TablaErrores.add(new Errores(var.getToken(), "INCOMPATIBILIDAD DE TIPOS", linea));
-                    numIDE++;
-                }
+            if (var.getLexema().equals(t1)) {
+                tipoDatoSwitch = var.getDato(); //obtener el tipo de dato del switch para comparar cases   
             }
         }
     }
@@ -457,22 +494,79 @@ public class CompiAritmetica extends javax.swing.JFrame {
         triploSwitch = triploSwitch + contadorTriplos + "\t\tTR1\t\tTRUE\t\t" + (contadorTriplos + 2) + "\n";
         contadorTriplos++;
         triploSwitch = triploSwitch + contadorTriplos + "\t\tTR1\t\tFALSE\t\tSALTO\n";
-        contadorTriplos++; //CAMBIAR SALTO
+        contadorTriplos++;
         triplo = triplo + triploSwitch;
-        /*
-int x1 , x2 ;
-float x3 ;
-x1 = x2 + x3 ;
-switch ( x1 )
-{
-case 1 :
-x2 = x1 ;
-break ;
-case 2 :
-x3 = x4 ;
-break ;
-}
-         */
+    }
+
+    public void calcularEnsamblador() {
+        //separar por lineas, eliminar numero lineas, y transformar la 2nd linea en ensamblador
+        String comparador = "", etiquetaTRUE = "", etiquetaFALSE = "", salida = "";
+        String[] linea = triplo.split("\\n");//separar
+        for (int j = 1; j <= linea.length - 1; j++) {
+            String[] lexema = linea[j].split("\\s");   //dividir por tokens el triplo
+
+            for (int i = 2; i <= lexema.length; i = i + 2) {
+                if (etiquetaTRUE.equals(lexema[i - 2])) {
+                    ensamblador = ensamblador + etiquetaTRUE + " :\n";
+                }
+                if (etiquetaFALSE.equals(lexema[i - 2])) {
+                    ensamblador = ensamblador + etiquetaFALSE + " :\n";
+                }
+                switch (lexema[i]) {
+                    case "=":
+                        switch (lexema[i + 2]) {
+                            case "T1":                              
+                                ensamblador = ensamblador + "MOV " + "AX" + " , " + lexema[i + 4] + "\n";
+                                break;
+                            case "T2":
+                                 comparador = lexema[i + 4];
+                                break;
+                            default:
+                                ensamblador = ensamblador + "MOV " + lexema[i + 2] + " , " + "AX" + "\n";
+                                break;
+                        }
+                        break;
+                    case "+":
+                        ensamblador = ensamblador + "ADD " + "AX" + " , " + lexema[i + 4] + "\n";
+                        break;
+                    case "-":
+                        ensamblador = ensamblador + "SUB " + "AX" + " , " + lexema[i + 4] + "\n";
+                        break;
+                    case "/":
+                        //ensamblador = ensamblador + "MOV " + "AX" + " , " + lexema[i + 2] + "\n";
+                        ensamblador = ensamblador + "MOV " + "BL" + " , " + lexema[i + 4] + "\n";
+                        ensamblador = ensamblador + "DIV " + "BL" + "\n";
+                        break;
+                    case "*":
+                        ensamblador = ensamblador + "MOV " + "AL" + " , " + lexema[i + 2] + "\n";
+                        ensamblador = ensamblador + "MOV " + "BL" + " , " + lexema[i + 4] + "\n";
+                        ensamblador = ensamblador + "MUL " + "BL" + "\n";
+                        break;
+                    case "==":
+                        ensamblador = ensamblador + "CMP " + "AX" + " , " + comparador + "\n"
+                                + "EQ EtiquetaTRUE" + "\n"
+                                + "JMP EtiquetaFALSE" + "\n";
+                        break;
+                    case "TR1":
+                        if (lexema[i + 2].equals("TRUE")) {
+                            etiquetaTRUE = lexema[i + 4];
+                            ensamblador = ensamblador.replaceFirst("EtiquetaTRUE", etiquetaTRUE);
+                        }
+                        if (lexema[i + 2].equals("FALSE")) {
+                            etiquetaFALSE = lexema[i + 4];
+                            ensamblador = ensamblador.replaceFirst("EtiquetaFALSE", etiquetaFALSE);
+                        }
+                        break;
+                    case "JMP":                       
+                        salida = lexema[i + 2];
+                        ensamblador = ensamblador + "JMP SALIDA\n";
+                        break;
+                }
+            }
+            if(j==linea.length-1)
+                ensamblador = ensamblador + linea[linea.length-1] + " :\n";
+        }
+        ensamblador = ensamblador + "SALIDA :\n";
     }
 
     public static int precedence(String operator) {
@@ -576,7 +670,7 @@ break ;
                     break;
 
                 default:
-                    if (!checarExistenciaErrores(lexema) && !checarExistencia(lexema)) {
+                    if (!checarExistenciaErrores(lexema) && !checarExistencia(lexema) && !linea.startsWith("case")) {
                         TablaErrores.add(new Errores("IDE" + numIDE, lexema, n));
                         TablaVariables.add(new Variables(lexema, "IDE" + numIDE, checarDato(lexema, linea)));
                         numIDE++;
@@ -651,7 +745,7 @@ break ;
     }
 
     public static void limpiarTabla() {
-        //HACER QUE ME LIMPIE LAS TABLAS
+        //resetar tablas y variables
         DefaultTableModel model1 = new DefaultTableModel();
         DefaultTableModel model2 = new DefaultTableModel();
         model1.setColumnIdentifiers(new Object[]{"LEXEMA", "TOKEN", "DATO"});
@@ -662,10 +756,12 @@ break ;
         TablaVariables.clear();
         tableErrores.setModel(model2);
         TablaErrores.clear();
-
+        contadorTriplos = 1;
+        tipoDatoSwitch = "";
         numIDE = 1;
         lexemas = "";
         texto = "";
+        ensamblador = "";
         triplo = "Operador\tDato Objeto\tDato Fuente\n";
 
     }
@@ -727,10 +823,23 @@ break ;
     }
 
     private void imprimirTxtTriplos() {
-
+        triplo = triplo + contadorTriplos;
         try (Writer writer = new BufferedWriter(new OutputStreamWriter(
                 new FileOutputStream("Archivo de Triplo.txt"), "utf-8"))) {
             writer.write(triplo);
+
+        } catch (UnsupportedEncodingException ex) {
+            Logger.getLogger(CompiAritmetica.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(CompiAritmetica.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }
+
+    private void imprimirEnsamblador() {
+        try (Writer writer = new BufferedWriter(new OutputStreamWriter(
+                new FileOutputStream("Archivo de Ensamblador.txt"), "utf-8"))) {
+            writer.write(ensamblador);
 
         } catch (UnsupportedEncodingException ex) {
             Logger.getLogger(CompiAritmetica.class.getName()).log(Level.SEVERE, null, ex);
